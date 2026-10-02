@@ -7,9 +7,6 @@
 gitlab-runner/*
 !gitlab-runner/.gitkeep
 
-# Extra certificates GitLab should trust
-trusted-certs/
-
 # Backups and temporary files
 *.bak
 *.bak.*

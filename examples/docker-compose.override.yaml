@@ -9,8 +9,6 @@
 #       - traefik
 #     labels:
 #       - "traefik.http.services.gitlab-registry.loadbalancer.serverstransport=registry-transport@file"
-#     volumes:
-#       - ./trusted-certs:/etc/gitlab/trusted-certs
 #     extra_hosts:
 #       - "git.internal.example.com:10.0.0.5"
 #

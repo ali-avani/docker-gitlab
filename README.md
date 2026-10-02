@@ -29,7 +29,8 @@ bash ./install.sh --regenerate   # write omnibus_config.rb again from .env
 bash ./install.sh --update-env   # rebuild .env from .env.sample, keep your values
 ```
 
-Values are read from the environment or `.env` first, so an unattended install is:
+Values are read from the environment or `.env` first. The `root` password and the runner
+token are never stored, so pass them in the environment. An unattended install is:
 
 ```bash
 INSTALL_TYPE=gitlab GITLAB_DOMAIN=gitlab.example.com REGISTRY_DOMAIN=registry.example.com \
@@ -46,11 +47,9 @@ INSTALL_TYPE=gitlab GITLAB_DOMAIN=gitlab.example.com REGISTRY_DOMAIN=registry.ex
 | `GITLAB_TIMEZONE` | Time zone (default `UTC`) |
 | `GITLAB_SSH_PORT` | Host port for git over SSH (default `22`) |
 | `GITLAB_LOW_MEMORY` | `true` = settings for small servers (default) |
-| `GITLAB_ROOT_PASSWORD` | `root` password, read on a new install only, then cleared |
 | `SMTP_HOST` `SMTP_PORT` `SMTP_USER` `SMTP_PASSWORD` `SMTP_DOMAIN` `SMTP_FROM` `SMTP_VERIFY_NONE` | Email. Empty `SMTP_HOST` = off |
 | `RUNNER_VERSION` `RUNNER_IMAGE` | Runner image tag and repository |
 | `RUNNER_URL` | GitLab URL for the runner (default `http://gitlab:80`) |
-| `RUNNER_TOKEN` | Runner token, read by `--runner` only, then cleared |
 | `RUNNER_NAME` `RUNNER_CONCURRENT` `RUNNER_LIMIT` `RUNNER_DOCKER_IMAGE` `RUNNER_PRIVILEGED` `RUNNER_MEMORY` | Runner settings |
 | `COMPOSE_FILE` `COMPOSE_PROFILES` | Set by the installer |
 
@@ -67,7 +66,7 @@ git-ignored because it can hold the SMTP password.
 ## Runner
 
 1. In GitLab: Admin > CI/CD > Runners > New instance runner. Copy the token (`glrt-...`).
-2. Run:
+2. Run (it asks for the token, or pass it as `RUNNER_TOKEN=glrt-... bash ./install.sh --runner`):
 
 ```bash
 bash ./install.sh --runner

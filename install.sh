@@ -58,7 +58,7 @@ write_env() {
         fi
         echo "$line"
     done < .env.sample > "$tmp"
-    other="$(grep -E '^[A-Za-z_][A-Za-z0-9_]*=' "$ENV_FILE" 2>/dev/null | while IFS= read -r line; do
+    other="$(grep -E '^[A-Za-z_][A-Za-z0-9_]*=' "$ENV_FILE" 2>/dev/null | grep -vE '^(GITLAB_ROOT_PASSWORD|RUNNER_TOKEN)=' | while IFS= read -r line; do
         grep -qE "^#?[[:space:]]*${line%%=*}=" .env.sample || echo "$line"
     done || true)"
     [[ -z "$other" ]] || printf '\n# Other settings kept from the previous %s\n%s\n' "$ENV_FILE" "$other" >> "$tmp"

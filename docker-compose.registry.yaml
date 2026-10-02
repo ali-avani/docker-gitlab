@@ -1,0 +1,8 @@
+# Overlay: Traefik route for the registry, enabled when REGISTRY_DOMAIN is set.
+services:
+  gitlab:
+    labels:
+      - "traefik.http.routers.gitlab-registry.rule=Host(`${REGISTRY_DOMAIN:?REGISTRY_DOMAIN is not set}`)"
+      - "traefik.http.routers.gitlab-registry.service=gitlab-registry"
+      - "traefik.http.services.gitlab-registry.loadbalancer.server.port=5100"
+      - "traefik.http.services.gitlab-registry.loadbalancer.passhostheader=true"

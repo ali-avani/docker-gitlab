@@ -1,0 +1,57 @@
+# GitLab and a runner behind Traefik. COMPOSE_PROFILES (set by install.sh) picks
+# the services: gitlab,runner or runner. Extras go in docker-compose.override.yaml.
+name: gitlab
+
+services:
+  gitlab:
+    profiles: ["gitlab"]
+    image: ${GITLAB_IMAGE:-gitlab/gitlab-ee}:${GITLAB_VERSION:-}
+    container_name: gitlab
+    restart: always
+    hostname: ${GITLAB_DOMAIN:-}
+    environment:
+      GITLAB_OMNIBUS_CONFIG: "from_file('/omnibus_config.rb')"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.gitlab.rule=Host(`${GITLAB_DOMAIN}`)"
+      - "traefik.http.routers.gitlab.service=gitlab"
+      - "traefik.http.services.gitlab.loadbalancer.server.port=80"
+      - "traefik.http.services.gitlab.loadbalancer.passhostheader=true"
+      - "traefik.http.routers.gitlab.middlewares=compresstraefik"
+      - "traefik.http.middlewares.compresstraefik.compress=true"
+    ports:
+      - "${GITLAB_SSH_PORT:-22}:22"
+    volumes:
+      - gitlab-data:/var/opt/gitlab
+      - gitlab-config:/etc/gitlab
+      - gitlab-logs:/var/log/gitlab
+      - ./omnibus_config.rb:/omnibus_config.rb:ro
+    shm_size: "256m"
+    networks:
+      - gitlab
+
+  gitlab-runner:
+    profiles: ["runner"]
+    image: ${RUNNER_IMAGE:-gitlab/gitlab-runner}:${RUNNER_VERSION:?RUNNER_VERSION is not set, run bash ./install.sh}
+    container_name: gitlab-runner
+    restart: always
+    depends_on:
+      gitlab:
+        condition: service_started
+        required: false
+    volumes:
+      - ./gitlab-runner:/etc/gitlab-runner
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - gitlab
+
+volumes:
+  gitlab-data:
+    external: true
+  gitlab-config:
+    external: true
+  gitlab-logs:
+    external: true
+
+networks:
+  gitlab:

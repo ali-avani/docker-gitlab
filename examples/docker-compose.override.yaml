@@ -1,0 +1,21 @@
+# Per-server additions. Uncomment, save as docker-compose.override.yaml, then run
+# bash ./install.sh --update-env.
+
+# services:
+#   gitlab:
+#     networks:
+#       - gitlab
+#       - mailcow-shared-net
+#       - traefik
+#     labels:
+#       - "traefik.http.services.gitlab-registry.loadbalancer.serverstransport=registry-transport@file"
+#     volumes:
+#       - ./trusted-certs:/etc/gitlab/trusted-certs
+#     extra_hosts:
+#       - "git.internal.example.com:10.0.0.5"
+#
+# networks:
+#   mailcow-shared-net:
+#     external: true
+#   traefik:
+#     external: true

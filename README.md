@@ -92,12 +92,17 @@ Use it for extra networks, mounts, `extra_hosts` or Traefik labels.
 
 ## Backups
 
-The GitLab backup does not include `gitlab.rb` and `gitlab-secrets.json`. Back up both:
+The GitLab backup does not include `gitlab.rb` and `gitlab-secrets.json`, which a restore
+needs. Back up both:
 
 ```bash
-docker exec gitlab gitlab-backup create SKIP=registry
+docker exec gitlab gitlab-backup create
 docker cp gitlab:/etc/gitlab /path/to/backup/etc-gitlab
 ```
+
+If the registry is enabled, add `SKIP=registry` to the first command. It leaves out the
+registry images, which CI can rebuild. The backup is a tar in the `gitlab-data` volume
+(`/var/opt/gitlab/backups`). Restoring needs the same GitLab version.
 
 ## Files
 

@@ -251,26 +251,42 @@ register_runner() {
     info "Runner registered"
 }
 
-install() {
+# Ask for the GitLab settings. The options only matter while omnibus_config.rb is written.
+ask_gitlab() {
     local host_re='^([A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?\.)+[A-Za-z]{2,}$'
+    ask GITLAB_DOMAIN "GitLab domain (e.g. gitlab.example.com)"
+    ask GITLAB_VERSION "GitLab version" "19.4.1-ee.0"
+    if [[ ! -f "$OMNIBUS_FILE" ]] || $REGENERATE; then
+        ask_optional REGISTRY_DOMAIN "Container registry domain (empty = no registry)"
+        ask GITLAB_TIMEZONE "Time zone" "UTC"
+        ask_optional SMTP_HOST "SMTP host for email (empty = no email)"
+        if [[ -n "${SMTP_HOST:-}" ]]; then
+            ask SMTP_PORT "SMTP port" "587"
+            ask SMTP_USER "SMTP user"
+            ask_secret SMTP_PASSWORD "SMTP password" 1
+        fi
+    fi
+    [[ "$GITLAB_DOMAIN" =~ $host_re ]] || die "invalid GITLAB_DOMAIN: $GITLAB_DOMAIN"
+    [[ -z "${REGISTRY_DOMAIN:-}" || "$REGISTRY_DOMAIN" =~ $host_re ]] || die "invalid REGISTRY_DOMAIN: $REGISTRY_DOMAIN"
+}
+
+# Start the stack. On a new install, set the root password once GitLab is healthy.
+start_stack() {
+    local root_pw="$1" answer=y
+    $YES || read -r -p "Start now? [Y/n]: " answer
+    [[ "${answer:-y}" =~ ^[Yy] ]] || return 0
+    compose up -d
+    if $NEW_INSTALL && [[ -n "$root_pw" ]]; then
+        wait_healthy && set_root_password "$root_pw" \
+            || echo "GitLab is not healthy yet. Set the root password later: docker exec -it gitlab gitlab-rake \"gitlab:password:reset[root]\""
+    fi
+}
+
+install() {
     ask INSTALL_TYPE "Install type: gitlab (GitLab and runner) or runner (runner only)" "gitlab"
     [[ "$INSTALL_TYPE" =~ ^(gitlab|runner)$ ]] || die "INSTALL_TYPE must be gitlab or runner"
-
     if [[ "$INSTALL_TYPE" == "gitlab" ]]; then
-        ask GITLAB_DOMAIN "GitLab domain (e.g. gitlab.example.com)"
-        ask GITLAB_VERSION "GitLab version" "19.4.1-ee.0"
-        if [[ ! -f "$OMNIBUS_FILE" ]] || $REGENERATE; then
-            ask_optional REGISTRY_DOMAIN "Container registry domain (empty = no registry)"
-            ask GITLAB_TIMEZONE "Time zone" "UTC"
-            ask_optional SMTP_HOST "SMTP host for email (empty = no email)"
-            if [[ -n "${SMTP_HOST:-}" ]]; then
-                ask SMTP_PORT "SMTP port" "587"
-                ask SMTP_USER "SMTP user"
-                ask_secret SMTP_PASSWORD "SMTP password" 1
-            fi
-        fi
-        [[ "$GITLAB_DOMAIN" =~ $host_re ]] || die "invalid GITLAB_DOMAIN: $GITLAB_DOMAIN"
-        [[ -z "${REGISTRY_DOMAIN:-}" || "$REGISTRY_DOMAIN" =~ $host_re ]] || die "invalid REGISTRY_DOMAIN: $REGISTRY_DOMAIN"
+        ask_gitlab
     else
         ask RUNNER_URL "GitLab URL for the runner (e.g. https://gitlab.example.com)"
     fi
@@ -288,18 +304,7 @@ install() {
     unset GITLAB_ROOT_PASSWORD RUNNER_TOKEN
     write_env
     info "Saved settings to $ENV_FILE"
-
-    if $START; then
-        local answer=y
-        $YES || read -r -p "Start now? [Y/n]: " answer
-        if [[ "${answer:-y}" =~ ^[Yy] ]]; then
-            compose up -d
-            if $NEW_INSTALL && [[ -n "$root_pw" ]]; then
-                wait_healthy && set_root_password "$root_pw" \
-                    || echo "GitLab is not healthy yet. Set the root password later: docker exec -it gitlab gitlab-rake \"gitlab:password:reset[root]\""
-            fi
-        fi
-    fi
+    ! $START || start_stack "$root_pw"
 
     echo
     if [[ "$INSTALL_TYPE" == "gitlab" ]]; then

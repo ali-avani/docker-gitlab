@@ -7,7 +7,7 @@ services:
     profiles: ["gitlab"]
     image: ${GITLAB_IMAGE:-gitlab/gitlab-ee}:${GITLAB_VERSION:-}
     container_name: gitlab
-    restart: always
+    restart: unless-stopped
     hostname: ${GITLAB_DOMAIN:-}
     environment:
       GITLAB_OMNIBUS_CONFIG: "from_file('/omnibus_config.rb')"
@@ -34,7 +34,7 @@ services:
     profiles: ["runner"]
     image: ${RUNNER_IMAGE:-gitlab/gitlab-runner}:${RUNNER_VERSION:?RUNNER_VERSION is not set, run bash ./install.sh}
     container_name: gitlab-runner
-    restart: always
+    restart: unless-stopped
     depends_on:
       gitlab:
         condition: service_started

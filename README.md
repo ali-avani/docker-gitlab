@@ -48,7 +48,7 @@ INSTALL_TYPE=gitlab GITLAB_DOMAIN=gitlab.example.com REGISTRY_DOMAIN=registry.ex
 | `GITLAB_SSH_PORT` | Host port for git over SSH (default `22`) |
 | `GITLAB_LOW_MEMORY` | `true` = settings for small servers (default) |
 | `SMTP_HOST` `SMTP_PORT` `SMTP_USER` `SMTP_PASSWORD` `SMTP_DOMAIN` `SMTP_FROM` `SMTP_VERIFY_NONE` | Email. Empty `SMTP_HOST` = off |
-| `RUNNER_VERSION` `RUNNER_IMAGE` | Runner image tag and repository |
+| `RUNNER_VERSION` `RUNNER_IMAGE` `RUNNER_HELPER_IMAGE` | Runner image tag, repository and helper image (for a mirror) |
 | `RUNNER_URL` | GitLab URL for the runner (default `http://gitlab:80`) |
 | `RUNNER_NAME` `RUNNER_CONCURRENT` `RUNNER_LIMIT` `RUNNER_DOCKER_IMAGE` `RUNNER_PRIVILEGED` `RUNNER_MEMORY` | Runner settings |
 | `COMPOSE_FILE` `COMPOSE_PROFILES` | Set by the installer |

@@ -240,6 +240,7 @@ register_runner() {
     [[ "${RUNNER_PRIVILEGED:-true}" != "true" ]] || args+=(--docker-privileged)
     local mem="${RUNNER_MEMORY-2g}"   # empty = no memory limit
     [[ -z "$mem" ]] || args+=(--docker-memory "$mem" --docker-memory-swap "$mem")
+    [[ -z "${RUNNER_HELPER_IMAGE:-}" ]] || args+=(--docker-helper-image "$RUNNER_HELPER_IMAGE")
 
     mkdir -p gitlab-runner
     compose run --rm --no-deps gitlab-runner "${args[@]}"
